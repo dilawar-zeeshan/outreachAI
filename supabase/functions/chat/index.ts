@@ -24,6 +24,15 @@ serve(async (req) => {
     // 1. Generate embedding for message
     const embedResult = await embeddingModel.embedContent(message)
     const embedding = embedResult.embedding.values
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('No auth header')
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    ).auth.getUser(token)
+    if (userError || !user) throw new Error('Unauthorized')
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -83,6 +92,7 @@ Respond with a JSON object:
 
     // 4. Store conversation in chat_history
     await supabaseAdmin.from('chat_history').insert({
+      user_id: user.id,
       user_message: message,
       ai_response: parsed.reply
     })

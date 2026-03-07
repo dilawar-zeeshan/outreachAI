@@ -85,12 +85,22 @@ serve(async (req) => {
       text: message,
     })
 
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('No auth header')
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    ).auth.getUser(token)
+    if (userError || !user) throw new Error('Unauthorized')
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     await supabaseAdmin.from('outreach_emails').insert({
+      user_id: user.id,
       email: email,
       email_content: message,
       company_name: niche || 'Unknown',

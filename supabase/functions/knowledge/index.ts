@@ -13,6 +13,15 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('No auth header')
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    ).auth.getUser(token)
+    if (userError || !user) throw new Error('Unauthorized')
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -23,6 +32,7 @@ serve(async (req) => {
       const { data, error } = await supabaseAdmin
         .from('knowledge_documents')
         .select('id, content')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true })
 
       if (error) throw error
@@ -43,8 +53,11 @@ serve(async (req) => {
       const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!)
       const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" })
 
-      // Clear the existing knowledge base completely for refresh
-      const { error: deleteError } = await supabaseAdmin.from('knowledge_documents').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      // Clear the existing knowledge base for this user
+      const { error: deleteError } = await supabaseAdmin
+        .from('knowledge_documents')
+        .delete()
+        .eq('user_id', user.id)
       if (deleteError) throw new Error(`Delete failed: ${deleteError.message}`)
 
       // Insert new documents
@@ -55,6 +68,7 @@ serve(async (req) => {
           const embedding = embedResult.embedding.values
 
           const { error: insertError } = await supabaseAdmin.from('knowledge_documents').insert({
+              user_id: user.id,
               content: content.trim(),
               embedding: embedding
           })
