@@ -10,7 +10,7 @@ const ChatWindow = ({ messages, setMessages }) => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendDraft = async (draftEmail, messageIndex, prefilledRecipient) => {
+  const handleSendDraft = async (draftEmail, messageIndex, prefilledRecipient, subject) => {
     setSendingDraft(true);
     try {
       let recipient = prefilledRecipient;
@@ -24,7 +24,7 @@ const ChatWindow = ({ messages, setMessages }) => {
         return;
       }
 
-      await sendEmail(recipient, "AI Chatbot for your business", draftEmail, prefilledRecipient ? messages[messageIndex].niche : 'Manual');
+      await sendEmail(recipient, subject || "AI Chatbot for your business", draftEmail, prefilledRecipient ? messages[messageIndex].niche : 'Manual');
       
       const updatedMessages = [...messages];
       updatedMessages[messageIndex] = {
@@ -63,14 +63,15 @@ const ChatWindow = ({ messages, setMessages }) => {
           <MessageBubble 
             message={msg.text} 
             isAi={msg.isAi} 
-            isDraft={msg.isDraft} 
+            isDraft={msg.isDraft}
+            subject={msg.subject}
           />
           {msg.isDraft && !msg.draftSent && (
             <div className="ai-wrapper">
                <div className="draft-actions">
                  <button 
                    className="btn-send-draft" 
-                   onClick={() => handleSendDraft(msg.text, idx, msg.recipientEmail)}
+                   onClick={() => handleSendDraft(msg.text, idx, msg.recipientEmail, msg.subject)}
                    disabled={sendingDraft}
                  >
                    {sendingDraft ? 'Sending...' : 'Confirm & Send Email'}

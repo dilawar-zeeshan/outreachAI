@@ -41,7 +41,8 @@ serve(async (req) => {
     // 2. Perform vector similarity search
     const { data: documents, error: matchError } = await supabaseAdmin.rpc('match_documents', {
       query_embedding: embedding,
-      match_count: 5
+      match_count: 5,
+      p_user_id: user.id
     })
 
     if (matchError) throw matchError
@@ -49,29 +50,43 @@ serve(async (req) => {
     const retrieved_documents = documents?.map((doc: any) => doc.content).join('\n\n') || ''
 
     // 3. Generate AI response using Gemini
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const chatModel = genAI.getGenerativeModel({ 
+      model: "gemini-flash-latest",
+      systemInstruction: `You are an AI assistant (E-LABZ AI). Your job is to help users write outreach emails based on their private knowledge base.
 
-    const systemPrompt = `You are an AI assistant (E-LABZ AI). 
-Developer Context: ${retrieved_documents}
+SENDER IDENTITY (Use this for "From" and Signatures):
+${retrieved_documents}
 
-Look at conversation history for recipient emails, business niches, and especially user corrections to previous turns. 
+STRICT RULES:
+1. ALWAYS identify the sender's Name, Email, and WhatsApp from the "SENDER IDENTITY" section above. 
+2. ALWAYS use the Sender's information for the email signature. 
+3. For WhatsApp, ALWAYS format it as a clickable link if a number is found: https://wa.me/[number_without_plus].
+4. THE RECIPIENT is the person/business the user mentioned. NEVER use the recipient's email address in your signature. 
+5. For RECIPIENT details: If you don't know their name, use "Hi Team at (Business Name)" or "Hi there". NEVER use placeholders like [Recipient Name] or [Business Name].
+6. DO NOT include the subject line inside the "body" text. Keep them strictly separate.
+7. Output MUST be a valid JSON object.
 
-Respond with a JSON object:
+JSON SCHEMA:
 { 
-  "reply": "friendly message mentioning what you did",
-  "draft_email": "professional outreach email. IMPORTANT: DO NOT USE placeholders like [Recipient Name] or [Business Name]. If the name is unknown, use 'Hi Team at (Niche Name)' or 'Hi there'. Write a complete, ready-to-send email.",
-  "recipient_email": "literal email address (use corrected version from history if user corrected it)",
-  "niche": "business category / industry"
-}`;
+  "reply": "friendly status update about the draft",
+  "subject": "compelling email subject line",
+  "body": "professional email body (WITHOUT the subject line)",
+  "recipient_email": "literal email address of the recipient",
+  "niche": "industry/category"
+}`
+    })
 
     const contents = [
       ...(history || []),
-      { role: "user", parts: [{ text: `${systemPrompt}\n\nUser request: ${message}` }] }
+      { role: "user", parts: [{ text: message }] }
     ];
 
     const result = await chatModel.generateContent({
       contents,
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig: { 
+        responseMimeType: "application/json",
+        temperature: 0.1
+      }
     })
     
     const responseText = result.response.text()
@@ -84,7 +99,8 @@ Respond with a JSON object:
       // Fallback
       parsed = {
         reply: "I generated an email for you.",
-        draft_email: responseText,
+        subject: "Outreach from E-LABZ AI",
+        body: responseText,
         recipient_email: null,
         niche: "Unknown"
       }
