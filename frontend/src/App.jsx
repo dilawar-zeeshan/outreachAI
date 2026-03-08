@@ -88,19 +88,32 @@ function Dashboard() {
   };
 
   if (!session) {
-    return <Login />;
+    return (
+      <div className="dashboard-wrapper">
+        <Login />
+      </div>
+    );
   }
 
   if (view === 'knowledge') {
-    return <KnowledgeBase onBack={() => setView('chat')} />;
+    return (
+      <div className="dashboard-wrapper">
+        <KnowledgeBase onBack={() => setView('chat')} />
+      </div>
+    );
   }
 
   if (view === 'history') {
-    return <OutreachHistory onBack={() => setView('chat')} />;
+    return (
+      <div className="dashboard-wrapper">
+        <OutreachHistory onBack={() => setView('chat')} />
+      </div>
+    );
   }
 
   return (
-    <div className="app-container">
+    <div className="dashboard-wrapper">
+      <div className="app-container">
       <header className="chat-header">
         <div className="header-left">
           <h1>E-LABZ AI Outreach</h1>
@@ -123,6 +136,7 @@ function Dashboard() {
 
       <div className="chat-input-container">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      </div>
       </div>
     </div>
   );
