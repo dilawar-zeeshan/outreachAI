@@ -8,7 +8,7 @@ import OutreachHistory from './components/OutreachHistory';
 import PortfolioPage from './pages/PortfolioPage';
 import { sendChatMessage, supabase } from './services/api';
 import { BookOpen, LogOut, History, Zap } from 'lucide-react';
-import './index.css';
+
 
 // Main AI Assistant Dashboard Component
 function Dashboard() {

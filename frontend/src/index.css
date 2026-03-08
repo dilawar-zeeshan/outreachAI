@@ -1,32 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --bg-color: #020617;
-  --panel-bg: #161b22;
-  --text-main: #c9d1d9;
-  --primary: #58a6ff;
-  --primary-hover: #3182ce;
-  --border-color: #30363d;
-  --ai-bubble: #1f2428;
-  --user-bubble: #238636;
-  --draft-bubble: #2d333b;
-  --danger-color: #f85149;
-  --danger-hover: #da3633;
+@theme {
+  --color-bg-main: #020617;
+  --color-panel-bg: #161b22;
+  --color-text-main: #c9d1d9;
+  --color-primary: #58a6ff;
+  --color-primary-hover: #3182ce;
+  --color-border-main: #30363d;
+  --color-ai-bubble: #1f2428;
+  --color-user-bubble: #238636;
+  --color-draft-bubble: #2d333b;
+  --color-danger-main: #f85149;
+  --color-danger-hover: #da3633;
 }
 
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-color);
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
-  background-size: 100% 100%, 40px 40px;
-  color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+@layer base {
+  :root {
+    --bg-color: var(--color-bg-main);
+    --panel-bg: var(--color-panel-bg);
+    --text-main: var(--color-text-main);
+    --primary: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --border-color: var(--color-border-main);
+    --ai-bubble: var(--color-ai-bubble);
+    --user-bubble: var(--color-user-bubble);
+    --draft-bubble: var(--color-draft-bubble);
+    --danger-color: var(--color-danger-main);
+    --danger-hover: var(--color-danger-hover);
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+  }
+
+  body {
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
+    background-size: 100% 100%, 40px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
 }
 
 #root {
