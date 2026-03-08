@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ChatWindow from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
 import Login from './components/Login';
 import KnowledgeBase from './components/KnowledgeBase';
 import OutreachHistory from './components/OutreachHistory';
+import PortfolioPage from './pages/PortfolioPage';
 import { sendChatMessage, supabase } from './services/api';
-import { BookOpen, LogOut, History } from 'lucide-react';
+import { BookOpen, LogOut, History, Zap } from 'lucide-react';
 import './index.css';
 
-function App() {
+// Main AI Assistant Dashboard Component
+function Dashboard() {
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem('e_labz_messages');
@@ -40,23 +43,20 @@ function App() {
   }, []);
 
   const handleSendMessage = async (text) => {
-    // Add user message
     const newMessages = [...messages, { text, isAi: false, isDraft: false }];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      // Pass the last few messages as context
       const historyContext = messages
         .filter(m => !m.text.startsWith('Error:'))
-        .slice(-6) // Include up to 3 rounds of conversation
+        .slice(-6)
         .map(m => ({ 
           role: m.isAi ? 'model' : 'user', 
           parts: [{ text: m.text }] 
         }));
 
       const response = await sendChatMessage(text, historyContext);
-
       const msgs = [...newMessages];
 
       if (response.reply) {
@@ -99,31 +99,48 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <header className="chat-header">
-        <div className="header-left">
-          <h1>E-LABZ AI Outreach</h1>
-          <p>Private Assistant to Zeeshan</p>
-        </div>
-        <div className="header-actions">
-          <button onClick={() => setView('history')} className="btn-secondary flex-center" title="Outreach History">
-            <History className="icon-small" /> History
-          </button>
-          <button onClick={() => setView('knowledge')} className="btn-secondary flex-center" title="Update Knowledge Base">
-            <BookOpen className="icon-small tooltip-icon" /> Knowledge Base
-          </button>
-          <button onClick={handleLogout} className="btn-danger flex-center" title="Sign Out">
-            <LogOut className="icon-small" /> Sign Out
-          </button>
-        </div>
-      </header>
+    <div className="flex justify-center items-center min-h-screen p-4">
+      <div className="app-container w-full max-w-[900px] flex flex-col">
+        <header className="chat-header">
+          <div className="header-left">
+            <h1 className="flex items-center gap-2">
+              <Zap className="w-6 h-6 text-cyan-400" />
+              E-LABZ AI Outreach
+            </h1>
+            <p>Private Assistant to Zeeshan</p>
+          </div>
+          <div className="header-actions">
+            <button onClick={() => setView('history')} className="btn-secondary flex-center" title="Outreach History">
+              <History className="icon-small" /> History
+            </button>
+            <button onClick={() => setView('knowledge')} className="btn-secondary flex-center" title="Update Knowledge Base">
+              <BookOpen className="icon-small tooltip-icon" /> Knowledge Base
+            </button>
+            <button onClick={handleLogout} className="btn-danger flex-center" title="Sign Out">
+              <LogOut className="icon-small" /> Sign Out
+            </button>
+          </div>
+        </header>
 
-      <ChatWindow messages={messages} setMessages={setMessages} />
+        <ChatWindow messages={messages} setMessages={setMessages} />
 
-      <div className="chat-input-container">
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <div className="chat-input-container">
+          <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
 
