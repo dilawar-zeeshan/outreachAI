@@ -131,3 +131,58 @@ export const getEmailHistory = async (page = 0, limit = 20) => {
 
     return response.json(); 
 };
+
+export const scrapeLeads = async (keyword, city, country) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || anonKey;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/scrape-leads`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ keyword, city, country }),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.text();
+    let errMsg = errorDetails;
+    try {
+      const parsed = JSON.parse(errorDetails);
+      if (parsed.error) errMsg = parsed.error;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  return response.json();
+};
+
+export const getTemplates = async () => {
+  const { data, error } = await supabase
+    .from('outreach_templates')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const saveTemplate = async (template) => {
+  const { data, error } = await supabase
+    .from('outreach_templates')
+    .upsert([template])
+    .select();
+  
+  if (error) throw error;
+  return data[0];
+};
+
+export const deleteTemplate = async (id) => {
+  const { error } = await supabase
+    .from('outreach_templates')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
