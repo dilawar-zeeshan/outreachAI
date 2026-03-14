@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const { data, error, count } = await supabaseAdmin
       .from('outreach_emails')
-      .select('id, email, company_name, created_at, status', { count: 'exact' })
+      .select('id, email, company_name, created_at, status, email_subject, email_content', { count: 'exact' })
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(from, to)

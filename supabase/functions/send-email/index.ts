@@ -102,6 +102,7 @@ serve(async (req) => {
     await supabaseAdmin.from('outreach_emails').insert({
       user_id: user.id,
       email: email,
+      email_subject: subject || 'AI chatbot for your business',
       email_content: message,
       company_name: niche || 'Unknown',
       status: 'sent'

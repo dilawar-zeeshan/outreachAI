@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag } from 'lucide-react';
-import { getEmailHistory } from '../services/api';
+import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { getEmailHistory, sendEmail } from '../services/api';
 
 const OutreachHistory = ({ onBack }) => {
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resendingId, setResendingId] = useState(null);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [message, setMessage] = useState(null);
   const limit = 20;
 
   useEffect(() => {
@@ -26,6 +28,31 @@ const OutreachHistory = ({ onBack }) => {
     }
   };
 
+  const handleResend = async (emailObj) => {
+    if (resendingId) return;
+    
+    setResendingId(emailObj.id);
+    setMessage(null);
+    
+    try {
+      await sendEmail(
+        emailObj.email, 
+        emailObj.email_subject || 'Outreach from E-LABZ AI', 
+        emailObj.email_content, 
+        emailObj.company_name
+      );
+      setMessage({ type: 'success', text: `Successfully resent to ${emailObj.email}` });
+      // Refresh history to update status if needed
+      fetchHistory();
+    } catch (err) {
+      setMessage({ type: 'error', text: `Failed to resend: ${err.message}` });
+    } finally {
+      setResendingId(null);
+      // Clear success message after 3 seconds
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
@@ -39,36 +66,66 @@ const OutreachHistory = ({ onBack }) => {
       </div>
 
       <div className="kb-content">
+        {message && (
+          <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`} style={{ marginBottom: '1.5rem' }}>
+            {message.type === 'success' ? <CheckCircle className="icon-small" /> : <AlertCircle className="icon-small" />}
+            {message.text}
+          </div>
+        )}
+
         {loading ? (
-          <div className="loading-state">Loading history...</div>
+          <div className="loading-state">
+            <Loader2 className="icon spin" /> Loading history...
+          </div>
         ) : emails.length === 0 ? (
           <div className="loading-state">No emails sent yet.</div>
         ) : (
           <>
             <div className="history-list">
               {emails.map((email) => (
-                <div key={email.id} className="history-item">
-                  <div className="history-info">
-                    <div className="history-row">
-                      <Mail className="icon-small text-dim" />
-                      <span className="history-email">{email.email}</span>
+                <div key={email.id} className="history-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="history-info">
+                      <div className="history-row">
+                        <Mail className="icon-small text-dim" />
+                        <span className="history-email">{email.email}</span>
+                      </div>
+                      <div className="history-row">
+                        <Tag className="icon-small text-dim" />
+                        <span className="history-niche">{email.company_name || 'Manual'}</span>
+                      </div>
                     </div>
-                    <div className="history-row">
-                      <Tag className="icon-small text-dim" />
-                      <span className="history-niche">{email.company_name || 'Manual'}</span>
+                    <div className="history-meta">
+                      <div className="history-row">
+                        <Calendar className="icon-small text-dim" />
+                        <span className="history-date">
+                          {new Date(email.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className={`status-badge ${email.status}`}>
+                        {email.status}
+                      </div>
                     </div>
                   </div>
-                  <div className="history-meta">
-                    <div className="history-row">
-                      <Calendar className="icon-small text-dim" />
-                      <span className="history-date">
-                        {new Date(email.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className={`status-badge ${email.status}`}>
-                      {email.status}
-                    </div>
-                  </div>
+                  
+                  <button 
+                    onClick={() => handleResend(email)}
+                    disabled={resendingId === email.id}
+                    className="btn-secondary flex-center"
+                    style={{ 
+                        height: 'fit-content', 
+                        padding: '0.5rem 1rem', 
+                        gap: '0.4rem',
+                        fontSize: '0.85rem'
+                    }}
+                    title="Resend same email"
+                  >
+                    {resendingId === email.id ? (
+                        <><Loader2 className="icon-small spin" /> Sending</>
+                    ) : (
+                        <><RotateCcw className="icon-small" /> Resend</>
+                    )}
+                  </button>
                 </div>
               ))}
             </div>

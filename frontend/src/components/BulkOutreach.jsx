@@ -578,7 +578,52 @@ export default function BulkOutreach({ onBack, messages }) {
             </div>
           </div>
 
-          {/* ... existing form fields ... */}
+          <div className="form-group" style={{ marginBottom: '1rem' }}>
+            <label>Template Name</label>
+            <input 
+              type="text"
+              placeholder="e.g. Dental Outreach - Initial"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="chat-input-field"
+              style={{ width: '100%', marginTop: '0.4rem' }}
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '1rem' }}>
+            <label>Email Subject</label>
+            <input 
+              type="text"
+              placeholder="Enter email subject"
+              value={templateSubject}
+              onChange={(e) => setTemplateSubject(e.target.value)}
+              className="chat-input-field"
+              style={{ width: '100%', marginTop: '0.4rem' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email Body</label>
+            <textarea 
+              value={templateBody}
+              onChange={(e) => setTemplateBody(e.target.value)}
+              placeholder="Write your email content here..."
+              className="kb-textarea"
+              rows={8}
+              style={{ marginTop: '0.4rem', fontSize: '0.95rem', lineHeight: '1.5' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <button 
+                onClick={handleSaveTemplate} 
+                disabled={isSavingTemplate}
+                className="btn-primary flex-center"
+                style={{ background: 'var(--primary)', color: '#fff', padding: '0.6rem 1.2rem' }}
+            >
+                {isSavingTemplate ? <><Loader2 className="icon-small spin" /> Saving...</> : <><Save className="icon-small" /> Save Template</>}
+            </button>
+          </div>
 
           <p style={{ fontSize: '0.75rem', color: '#8b949e', marginTop: '1rem' }}>
             * Changes here will apply to all emails sent in this bulk batch.
