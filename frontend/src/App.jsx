@@ -8,7 +8,7 @@ import OutreachHistory from './components/OutreachHistory';
 import BulkOutreach from './components/BulkOutreach';
 import PortfolioPage from './pages/PortfolioPage';
 import { sendChatMessage, supabase } from './services/api';
-import { BookOpen, LogOut, History, Zap, Target } from 'lucide-react';
+import { BookOpen, LogOut, History, Zap, Target, Trash2 } from 'lucide-react';
 
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -33,6 +33,7 @@ function Dashboard() {
     return saved ? JSON.parse(saved) : [];
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -99,6 +100,16 @@ function Dashboard() {
     }
   };
 
+  const handleClearChat = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearChat = () => {
+    setMessages([]);
+    sessionStorage.removeItem('e_labz_messages');
+    setShowClearConfirm(false);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -106,6 +117,7 @@ function Dashboard() {
   const handleBack = () => navigate('/');
 
   return (
+    <>
     <Routes>
       <Route path="/" element={
         <ProtectedRoute session={session}>
@@ -117,6 +129,9 @@ function Dashboard() {
                   <p>Private Assistant to Zeeshan</p>
                 </div>
                 <div className="header-actions">
+                  <button onClick={handleClearChat} className="btn-secondary flex-center" title="Clear Chat Context" style={{ color: '#f85149' }}>
+                    <Trash2 className="icon-small" /> Clear Chat
+                  </button>
                   <button onClick={() => navigate('/bulk')} className="btn-secondary flex-center" title="Bulk Outreach">
                     <Target className="icon-small" /> Bulk Outreach
                   </button>
@@ -169,6 +184,70 @@ function Dashboard() {
       <Route path="/portfolio" element={<PortfolioPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+
+    {/* Clear Chat Confirmation Modal */}
+    {showClearConfirm && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'var(--bg-color)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '16px',
+          padding: '2.5rem',
+          maxWidth: '450px',
+          width: '100%',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            width: '64px', 
+            height: '64px', 
+            borderRadius: '50%', 
+            background: 'rgba(248, 81, 73, 0.1)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem',
+            color: '#f85149'
+          }}>
+            <Trash2 size={32} />
+          </div>
+          <h2 style={{ marginBottom: '0.75rem', fontSize: '1.5rem', color: '#fff' }}>Clear Chat?</h2>
+          <p style={{ color: '#8b949e', marginBottom: '2rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
+            Are you sure you want to clear all messages? This will also reset the AI context and save your input tokens.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              onClick={() => setShowClearConfirm(false)} 
+              className="btn-secondary" 
+              style={{ flex: 1, height: '48px', fontSize: '1rem' }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={confirmClearChat} 
+              className="btn-primary" 
+              style={{ flex: 1, height: '48px', backgroundColor: '#f85149', borderColor: '#f85149', fontSize: '1rem' }}
+            >
+              Clear Everything
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
