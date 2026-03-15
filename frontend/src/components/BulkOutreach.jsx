@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Mail, Building, Globe, MapPin, Send, Loader2, CheckCircle, AlertCircle, Download, Trash2, Edit2, Save, X, CheckSquare, Square, Filter, ChevronDown, Plus } from 'lucide-react';
+import { ArrowLeft, Search, Mail, Building, Globe, MapPin, Send, Loader2, CheckCircle, AlertCircle, Download, Trash2, Edit2, Save, X, CheckSquare, Square, Filter, ChevronDown, Plus, Phone } from 'lucide-react';
 import { Select } from 'antd';
 import { Country, City } from 'country-state-city';
 import { scrapeLeads, sendEmail, getTemplates, saveTemplate, deleteTemplate } from '../services/api';
@@ -492,7 +492,7 @@ export default function BulkOutreach({ onBack, messages }) {
                         </button>
                     </th>
                     <th style={{ padding: '12px', width: '28%' }}>Business</th>
-                    <th style={{ padding: '12px', width: '28%' }}>Location</th>
+                    <th style={{ padding: '12px', width: '28%' }}>Phone / WhatsApp</th>
                     <th style={{ padding: '12px', width: '28%' }}>Contact</th>
                     <th style={{ padding: '12px', width: '80px', textAlign: 'center' }}>Action</th>
                   </tr>
@@ -519,9 +519,25 @@ export default function BulkOutreach({ onBack, messages }) {
                         {lead.website && <a href={lead.website} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>{lead.website}</a>}
                       </td>
                       <td style={{ padding: '12px', fontSize: '0.85rem', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                        <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '4px' }}>
-                          <MapPin className="icon-small" style={{ width: '12px' }} /> {lead.address || 'No address'}
-                        </div>
+                        {editingIndex === idx ? (
+                             <input 
+                                className="chat-input-field" 
+                                value={editingData.phone || ''} 
+                                onChange={e => setEditingData({...editingData, phone: e.target.value})}
+                                style={{ padding: '4px 8px', fontSize: '0.9rem', width: '100%' }}
+                                placeholder="Phone number"
+                            />
+                        ) : (
+                          <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '4px' }}>
+                            {lead.phone ? (
+                                <>
+                                    <Phone className="icon-small" style={{ width: '12px' }} /> {lead.phone}
+                                </>
+                            ) : (
+                                <span style={{ color: '#8b949e' }}>No phone</span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '12px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         {editingIndex === idx ? (
@@ -543,7 +559,7 @@ export default function BulkOutreach({ onBack, messages }) {
                                 )}
                             </>
                         )}
-                        {lead.phone && <div style={{ fontSize: '0.8rem', color: '#8b949e' }}>Tel: {lead.phone}</div>}
+                        {/* Phone now displayed in its own column */}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         {editingIndex === idx ? (
