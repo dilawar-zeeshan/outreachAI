@@ -177,7 +177,7 @@ serve(async (req) => {
     console.log(`Found ${uniqueResults.length} total unique lead websites across ${queries.length} queries.`);
 
     // Visit each website to get more info
-    const allLeads = await Promise.all(uniqueResults.slice(0, 40).map(async (lead) => {
+    const allLeads = await Promise.all(uniqueResults.slice(0, 100).map(async (lead) => {
       const { name, emails } = await getPageDetails(lead.url);
       
       return {
