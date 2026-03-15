@@ -483,7 +483,7 @@ export default function BulkOutreach({ onBack, messages }) {
             </div>
 
             <div className="table-wrapper" style={{ overflowX: 'auto', background: 'var(--bg-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'fixed' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
                     <th style={{ padding: '12px', width: '40px' }}>
@@ -491,21 +491,21 @@ export default function BulkOutreach({ onBack, messages }) {
                             {selectedIndices.size === leads.length ? <CheckSquare size={18} /> : <Square size={18} />}
                         </button>
                     </th>
-                    <th style={{ padding: '12px' }}>Business</th>
-                    <th style={{ padding: '12px' }}>Location</th>
-                    <th style={{ padding: '12px' }}>Contact</th>
-                    <th style={{ padding: '12px', width: '40px' }}></th>
+                    <th style={{ padding: '12px', width: '28%' }}>Business</th>
+                    <th style={{ padding: '12px', width: '28%' }}>Location</th>
+                    <th style={{ padding: '12px', width: '28%' }}>Contact</th>
+                    <th style={{ padding: '12px', width: '80px', textAlign: 'center' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leads.map((lead, idx) => (
                     <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)', opacity: selectedIndices.has(idx) ? 1 : 0.5 }}>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '12px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         <button onClick={() => toggleSelect(idx)} className="btn-icon" style={{ background: 'none', border: 'none', color: selectedIndices.has(idx) ? 'var(--primary)' : '#8b949e', cursor: 'pointer' }}>
                             {selectedIndices.has(idx) ? <CheckSquare size={18} /> : <Square size={18} />}
                         </button>
                       </td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '12px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         {editingIndex === idx ? (
                             <input 
                                 className="chat-input-field" 
@@ -518,12 +518,12 @@ export default function BulkOutreach({ onBack, messages }) {
                         )}
                         {lead.website && <a href={lead.website} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>{lead.website}</a>}
                       </td>
-                      <td style={{ padding: '12px', fontSize: '0.85rem' }}>
+                      <td style={{ padding: '12px', fontSize: '0.85rem', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         <div className="flex-center" style={{ justifyContent: 'flex-start', gap: '4px' }}>
                           <MapPin className="icon-small" style={{ width: '12px' }} /> {lead.address || 'No address'}
                         </div>
                       </td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '12px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         {editingIndex === idx ? (
                             <input 
                                 className="chat-input-field" 
@@ -545,7 +545,7 @@ export default function BulkOutreach({ onBack, messages }) {
                         )}
                         {lead.phone && <div style={{ fontSize: '0.8rem', color: '#8b949e' }}>Tel: {lead.phone}</div>}
                       </td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
                         {editingIndex === idx ? (
                             <div className="flex-center">
                                 <button onClick={saveEdit} className="btn-secondary" style={{ padding: '4px' }} title="Save"><Save size={14} /></button>
