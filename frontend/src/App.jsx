@@ -7,7 +7,7 @@ import KnowledgeBase from './components/KnowledgeBase';
 import OutreachHistory from './components/OutreachHistory';
 import BulkOutreach from './components/BulkOutreach';
 import PortfolioPage from './pages/PortfolioPage';
-import { sendChatMessage, supabase } from './services/api';
+import { sendChatMessage, supabase, processQueue } from './services/api';
 import { BookOpen, LogOut, History, Zap, Target, Trash2 } from 'lucide-react';
 
 
@@ -56,8 +56,19 @@ function Dashboard() {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    let queueInterval;
+    if (session) {
+      // Process one email from the pending queue every 3 minutes
+      queueInterval = setInterval(() => {
+        processQueue().catch(console.error);
+      }, 3 * 60 * 1000); // 3 minutes
+    }
+
+    return () => {
+        subscription.unsubscribe();
+        if (queueInterval) clearInterval(queueInterval);
+    };
+  }, [session]);
 
   const handleSendMessage = async (text) => {
     const newMessages = [...messages, { text, isAi: false, isDraft: false }];

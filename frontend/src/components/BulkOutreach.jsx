@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Mail, Building, Globe, MapPin, Send, Loader2, CheckCircle, AlertCircle, Download, Trash2, Edit2, Save, X, CheckSquare, Square, Filter, ChevronDown, Plus, Phone } from 'lucide-react';
 import { Select } from 'antd';
 import { Country, City } from 'country-state-city';
-import { scrapeLeads, sendEmail, getTemplates, saveTemplate, deleteTemplate } from '../services/api';
+import { scrapeLeads, sendEmail, queueEmails, getTemplates, saveTemplate, deleteTemplate } from '../services/api';
 
 const { Option } = Select;
 
@@ -127,20 +127,34 @@ export default function BulkOutreach({ onBack, messages }) {
     setSuccessCount(0);
     setSendingProgress({ current: 0, total: leadsWithEmails.length });
 
-    for (let i = 0; i < leadsWithEmails.length; i++) {
-        const lead = leadsWithEmails[i];
-        setSendingProgress(prev => ({ ...prev, current: i + 1 }));
-        
-        try {
-            await sendEmail(lead.emails[0], templateSubject, templateBody, keyword);
-            setSuccessCount(prev => prev + 1);
-        } catch (err) {
-            console.error(`Failed to send to ${lead.name}:`, err);
-        }
-        
-        await new Promise(r => setTimeout(r, 500));
+    if (leadsWithEmails.length === 0) {
+      setIsSending(false);
+      return;
     }
 
+    try {
+        // Send the very first one immediately
+        const firstLead = leadsWithEmails[0];
+        setSendingProgress({ current: 1, total: leadsWithEmails.length });
+        await sendEmail(firstLead.emails[0], templateSubject, templateBody, keyword);
+        setSuccessCount(1);
+        
+        // Queue the rest to be sent 1 every 3 minutes
+        const restLeads = leadsWithEmails.slice(1);
+        if (restLeads.length > 0) {
+            const queueItems = restLeads.map(lead => ({
+                email: lead.emails[0], 
+                subject: templateSubject, 
+                message: templateBody, 
+                niche: keyword || 'Unknown'
+            }));
+            await queueEmails(queueItems);
+        }
+    } catch (err) {
+        setError("Failed to start outreach: " + err.message);
+    }
+    
+    setSendingProgress({ current: leadsWithEmails.length, total: leadsWithEmails.length });
     setIsSending(false);
   };
 
@@ -439,7 +453,7 @@ export default function BulkOutreach({ onBack, messages }) {
 
         {successCount > 0 && !isSending && (
           <div className="alert alert-success" style={{ marginTop: '1rem' }}>
-            <CheckCircle className="icon-small" /> Successfully sent {successCount} emails!
+            <CheckCircle className="icon-small" /> Sent 1 email immediately. The remaining {leads.filter((_, i) => selectedIndices.has(i)).filter(l => l.emails && l.emails.length > 0).length - 1} leads have been queued and will be sent 1 every 3 minutes.
           </div>
         )}
 

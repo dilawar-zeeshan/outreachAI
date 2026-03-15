@@ -11,6 +11,7 @@ const OutreachHistory = ({ onBack }) => {
   const [message, setMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [activeStatus, setActiveStatus] = useState('sent');
   const limit = 20;
 
   useEffect(() => {
@@ -23,12 +24,12 @@ const OutreachHistory = ({ onBack }) => {
 
   useEffect(() => {
     fetchHistory();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, activeStatus]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const data = await getEmailHistory(page, limit, debouncedSearch);
+      const data = await getEmailHistory(page, limit, debouncedSearch, activeStatus);
       setEmails(data.emails || []);
       setTotalCount(data.totalCount || 0);
     } catch (err) {
@@ -76,6 +77,39 @@ const OutreachHistory = ({ onBack }) => {
       </div>
 
       <div className="kb-content">
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            <button 
+              onClick={() => { setActiveStatus('sent'); setPage(0); }}
+              style={{ 
+                padding: '0.75rem 1.5rem', 
+                background: 'none', 
+                border: 'none', 
+                color: activeStatus === 'sent' ? 'var(--primary)' : '#8b949e',
+                borderBottom: activeStatus === 'sent' ? '2px solid var(--primary)' : '2px solid transparent',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              Sent History
+            </button>
+            <button 
+              onClick={() => { setActiveStatus('pending'); setPage(0); }}
+              style={{ 
+                padding: '0.75rem 1.5rem', 
+                background: 'none', 
+                border: 'none', 
+                color: activeStatus === 'pending' ? 'var(--primary)' : '#8b949e',
+                borderBottom: activeStatus === 'pending' ? '2px solid var(--primary)' : '2px solid transparent',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              Pending Queue
+            </button>
+        </div>
+
         <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
           <input 
             type="text" 
@@ -130,24 +164,26 @@ const OutreachHistory = ({ onBack }) => {
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={() => handleResend(email)}
-                    disabled={resendingId === email.id}
-                    className="btn-secondary flex-center"
-                    style={{ 
-                        height: 'fit-content', 
-                        padding: '0.5rem 1rem', 
-                        gap: '0.4rem',
-                        fontSize: '0.85rem'
-                    }}
-                    title="Resend same email"
-                  >
-                    {resendingId === email.id ? (
-                        <><Loader2 className="icon-small spin" /> Sending</>
-                    ) : (
-                        <><RotateCcw className="icon-small" /> Resend</>
-                    )}
-                  </button>
+                  {activeStatus === 'sent' && (
+                    <button 
+                        onClick={() => handleResend(email)}
+                        disabled={resendingId === email.id}
+                        className="btn-secondary flex-center"
+                        style={{ 
+                            height: 'fit-content', 
+                            padding: '0.5rem 1rem', 
+                            gap: '0.4rem',
+                            fontSize: '0.85rem'
+                        }}
+                        title="Resend same email"
+                    >
+                        {resendingId === email.id ? (
+                            <><Loader2 className="icon-small spin" /> Sending</>
+                        ) : (
+                            <><RotateCcw className="icon-small" /> Resend</>
+                        )}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

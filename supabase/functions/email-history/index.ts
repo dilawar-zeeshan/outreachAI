@@ -30,6 +30,7 @@ serve(async (req) => {
     const page = parseInt(url.searchParams.get('page') || '0')
     const limit = parseInt(url.searchParams.get('limit') || '20')
     const search = url.searchParams.get('search') || ''
+    const status = url.searchParams.get('status') || ''
     
     const from = page * limit
     const to = from + limit - 1
@@ -41,6 +42,10 @@ serve(async (req) => {
 
     if (search) {
       query = query.ilike('email', `%${search}%`)
+    }
+    
+    if (status) {
+      query = query.eq('status', status)
     }
 
     const { data, error, count } = await query

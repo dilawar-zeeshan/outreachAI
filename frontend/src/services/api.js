@@ -112,13 +112,16 @@ export const updateKnowledgeBase = async (documents) => {
     return response.json(); 
 };
 
-export const getEmailHistory = async (page = 0, limit = 20, search = '') => {
+export const getEmailHistory = async (page = 0, limit = 20, search = '', status = '') => {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || anonKey;
 
     let url = `${supabaseUrl}/functions/v1/email-history?page=${page}&limit=${limit}`;
     if (search) {
       url += `&search=${encodeURIComponent(search)}`;
+    }
+    if (status) {
+      url += `&status=${encodeURIComponent(status)}`;
     }
 
     const response = await fetch(url, {
@@ -190,4 +193,49 @@ export const deleteTemplate = async (id) => {
     .eq('id', id);
   
   if (error) throw error;
+};
+
+export const queueEmails = async (items) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || anonKey;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/queue-emails`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ items }),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.text();
+    let errMsg = errorDetails;
+    try {
+      const parsed = JSON.parse(errorDetails);
+      if (parsed.error) errMsg = parsed.error;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  return response.json();
+};
+
+export const processQueue = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || anonKey;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    }
+  });
+
+  if (!response.ok) {
+    return null; // Ignore errors quietly if nothing to process
+  }
+
+  return response.json();
 };
