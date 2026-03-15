@@ -112,11 +112,16 @@ export const updateKnowledgeBase = async (documents) => {
     return response.json(); 
 };
 
-export const getEmailHistory = async (page = 0, limit = 20) => {
+export const getEmailHistory = async (page = 0, limit = 20, search = '') => {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || anonKey;
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/email-history?page=${page}&limit=${limit}`, {
+    let url = `${supabaseUrl}/functions/v1/email-history?page=${page}&limit=${limit}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

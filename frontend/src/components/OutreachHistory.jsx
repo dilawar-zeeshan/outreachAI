@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle, Search } from 'lucide-react';
 import { getEmailHistory, sendEmail } from '../services/api';
 
 const OutreachHistory = ({ onBack }) => {
@@ -9,16 +9,26 @@ const OutreachHistory = ({ onBack }) => {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [message, setMessage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const limit = 20;
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     fetchHistory();
-  }, [page]);
+  }, [page, debouncedSearch]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const data = await getEmailHistory(page, limit);
+      const data = await getEmailHistory(page, limit, debouncedSearch);
       setEmails(data.emails || []);
       setTotalCount(data.totalCount || 0);
     } catch (err) {
@@ -66,6 +76,18 @@ const OutreachHistory = ({ onBack }) => {
       </div>
 
       <div className="kb-content">
+        <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder="Search by email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="chat-input-field"
+            style={{ width: '100%', paddingLeft: '2.5rem', height: '45px' }}
+          />
+          <Search className="icon-small text-dim" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        </div>
+
         {message && (
           <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`} style={{ marginBottom: '1.5rem' }}>
             {message.type === 'success' ? <CheckCircle className="icon-small" /> : <AlertCircle className="icon-small" />}

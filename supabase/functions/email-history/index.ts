@@ -29,14 +29,21 @@ serve(async (req) => {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '0')
     const limit = parseInt(url.searchParams.get('limit') || '20')
+    const search = url.searchParams.get('search') || ''
     
     const from = page * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('outreach_emails')
       .select('id, email, company_name, created_at, status, email_subject, email_content', { count: 'exact' })
       .eq('user_id', user.id)
+
+    if (search) {
+      query = query.ilike('email', `%${search}%`)
+    }
+
+    const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range(from, to)
 
