@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle, Search, Play } from 'lucide-react';
 import { getEmailHistory, sendEmail, processQueue } from '../services/api';
 
-const OutreachHistory = ({ onBack }) => {
+const OutreachHistory = () => {
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resendingId, setResendingId] = useState(null);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [message, setMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -39,6 +40,7 @@ const OutreachHistory = ({ onBack }) => {
       const data = await getEmailHistory(page, limit, debouncedSearch, activeStatus);
       setEmails(data.emails || []);
       setTotalCount(data.totalCount || 0);
+      setPendingCount(data.pendingCount || 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -75,57 +77,54 @@ const OutreachHistory = ({ onBack }) => {
 
   return (
     <div className="kb-container">
-      <div className="kb-header">
-         <button onClick={onBack} className="btn-icon" title="Back to Chat">
-           <ArrowLeft className="icon" />
-         </button>
+      <div className="kb-header" style={{ gap: '2rem', justifyContent: 'flex-start' }}>
          <h2>Outreach History</h2>
-         <div style={{ width: '40px' }}></div> {/* Spacer */}
-      </div>
-
-      <div className="kb-content">
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', padding: '0.25rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', width: 'fit-content' }}>
+         
+         <div style={{ display: 'flex', gap: '0.25rem', padding: '0.2rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
             <button 
               onClick={() => { setActiveStatus('sent'); setPage(0); }}
               className="flex-center"
               style={{ 
-                padding: '0.6rem 1.25rem', 
+                padding: '0.4rem 1rem', 
                 background: activeStatus === 'sent' ? 'var(--primary)' : 'transparent', 
                 border: 'none', 
                 color: activeStatus === 'sent' ? '#fff' : '#8b949e',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: '600',
                 transition: 'all 0.2s',
-                gap: '0.5rem'
+                fontSize: '0.85rem'
               }}
             >
-              <RotateCcw className="icon-small" /> Sent History
+              <RotateCcw size={14} /> Sent
             </button>
             <button 
               onClick={() => { setActiveStatus('pending'); setPage(0); }}
               className="flex-center"
               style={{ 
-                padding: '0.6rem 1.25rem', 
+                padding: '0.4rem 1rem', 
                 background: activeStatus === 'pending' ? 'var(--primary)' : 'transparent', 
                 border: 'none', 
                 color: activeStatus === 'pending' ? '#fff' : '#8b949e',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: '600',
                 transition: 'all 0.2s',
-                gap: '0.5rem'
+                fontSize: '0.85rem'
               }}
             >
-              <Play className="icon-small" /> Pending Queue
-              {activeStatus !== 'pending' && totalCount > 0 && activeStatus === 'sent' && (
-                  // Small indicator if there are pending items while on Sent tab
-                  <span style={{ fontSize: '0.7rem', background: '#f85149', color: '#fff', padding: '2px 6px', borderRadius: '10px', marginLeft: '4px' }}>
-                    Active
+              <Play size={14} /> Pending
+              {activeStatus === 'sent' && pendingCount > 0 && (
+                  <span style={{ fontSize: '0.65rem', background: '#f85149', color: '#fff', padding: '1px 5px', borderRadius: '10px', marginLeft: '4px' }}>
+                    {pendingCount > 99 ? '99+' : pendingCount}
                   </span>
               )}
             </button>
-        </div>
+         </div>
+      </div>
+
+      <div className="kb-content">
+
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', flex: 1 }}>
@@ -153,52 +152,55 @@ const OutreachHistory = ({ onBack }) => {
             <Loader2 className="icon spin" /> Loading history...
           </div>
         ) : emails.length === 0 ? (
-          <div className="loading-state">No emails sent yet.</div>
+          <div className="loading-state">
+            {activeStatus === 'pending' ? (
+              <>
+                <Search className="icon text-dim" style={{ opacity: 0.3, width: '40px', height: '40px' }} />
+                <span>The pending queue is empty. Ready for more bulk outreach!</span>
+              </>
+            ) : (
+              <>
+                <Mail className="icon text-dim" style={{ opacity: 0.3, width: '40px', height: '40px' }} />
+                <span>No sent history found yet.</span>
+              </>
+            )}
+          </div>
         ) : (
           <>
             <div className="history-list">
               {emails.filter(e => e.status === activeStatus).map((email) => (
-                <div key={email.id} className="history-item" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    borderLeft: `4px solid ${email.status === 'sent' ? '#3fb950' : '#f1e05a'}`
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div className="history-info">
-                      <div className="history-row">
-                        <Mail className="icon-small text-dim" />
-                        <span className="history-email">{email.email}</span>
-                      </div>
-                      <div className="history-row">
-                        <Tag className="icon-small text-dim" />
-                        <span className="history-niche">{email.company_name || 'Manual'}</span>
-                      </div>
+                <div key={email.id} className={`history-item ${email.status}`}>
+                  <div className="history-content-row">
+                    <div className="history-cell email-cell">
+                      <Mail className="icon-small text-dim hide-mobile" />
+                      <span className="history-email" title={email.email}>{email.email}</span>
                     </div>
-                    <div className="history-meta">
-                      <div className="history-row">
-                        <Calendar className="icon-small text-dim" />
-                        <span className="history-date">
-                          {new Date(email.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
+                    
+                    <div className="history-cell niche-cell">
+                      <Tag className="icon-small text-dim hide-mobile" />
+                      <span className="history-niche">{email.company_name || 'Manual'}</span>
+                    </div>
+
+                    <div className="history-cell date-cell">
+                      <Calendar className="icon-small text-dim hide-mobile" />
+                      <span className="history-date">
+                        {new Date(email.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="history-cell status-cell">
                       <div className={`status-badge ${email.status}`}>
                         {email.status}
                       </div>
                     </div>
                   </div>
-                  
+
                   {activeStatus === 'sent' && (
                     <button 
                         onClick={() => handleResend(email)}
                         disabled={resendingId === email.id}
-                        className="btn-secondary flex-center"
-                        style={{ 
-                            height: 'fit-content', 
-                            padding: '0.5rem 1rem', 
-                            gap: '0.4rem',
-                            fontSize: '0.85rem'
-                        }}
+                        className="btn-secondary flex-center resend-btn"
+                        style={{ height: '36px', padding: '0 1rem' }}
                         title="Resend same email"
                     >
                         {resendingId === email.id ? (

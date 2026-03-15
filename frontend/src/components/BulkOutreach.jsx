@@ -6,7 +6,7 @@ import { scrapeLeads, sendEmail, queueEmails, getTemplates, saveTemplate, delete
 
 const { Option } = Select;
 
-export default function BulkOutreach({ onBack, messages }) {
+export default function BulkOutreach({ messages }) {
   const [countryId, setCountryId] = useState('ES'); // Default to Spain
   const [cityId, setCityId] = useState('Madrid');
   const [keyword, setKeyword] = useState('');
@@ -315,48 +315,23 @@ export default function BulkOutreach({ onBack, messages }) {
     <div className="app-container">
       <header className="chat-header">
         <div className="header-left">
-          <div className="flex-center" style={{ gap: '1rem' }}>
-            <button onClick={onBack} className="btn-secondary flex-center" title="Back to Chat">
-              <ArrowLeft className="icon-small" />
-            </button>
-            <div>
-              <h1>Bulk Outreach</h1>
-              <p>Scrape leads and manage outreach</p>
-            </div>
-          </div>
+          <h1>Bulk Outreach</h1>
+          <p>Scrape leads and manage outreach</p>
         </div>
       </header>
 
       <div className="kb-content">
         <div className="bulk-form" style={{ padding: '1rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="bulk-tabs">
             <button 
               onClick={() => setActiveTab('search')}
-              style={{ 
-                padding: '0.75rem 1.5rem', 
-                background: 'none', 
-                border: 'none', 
-                color: activeTab === 'search' ? 'var(--primary)' : '#8b949e',
-                borderBottom: activeTab === 'search' ? '2px solid var(--primary)' : '2px solid transparent',
-                cursor: 'pointer',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
+              className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
             >
               Search & Scrape
             </button>
             <button 
               onClick={() => setActiveTab('manual')}
-              style={{ 
-                padding: '0.75rem 1.5rem', 
-                background: 'none', 
-                border: 'none', 
-                color: activeTab === 'manual' ? 'var(--primary)' : '#8b949e',
-                borderBottom: activeTab === 'manual' ? '2px solid var(--primary)' : '2px solid transparent',
-                cursor: 'pointer',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
+              className={`tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
             >
               Manual Input
             </button>
@@ -365,7 +340,7 @@ export default function BulkOutreach({ onBack, messages }) {
           {activeTab === 'search' ? (
             <>
               <div className="form-row">
-                <div className="form-group flex-1">
+                <div className="form-group" style={{ flex: '1.2' }}>
                   <label>Country</label>
                   <Select
                     showSearch
@@ -384,7 +359,7 @@ export default function BulkOutreach({ onBack, messages }) {
                     options={countries.map(c => ({ value: c.isoCode, label: c.name }))}
                   />
                 </div>
-                <div className="form-group flex-1">
+                <div className="form-group" style={{ flex: '1.2' }}>
                   <label>City</label>
                   <Select
                     showSearch
@@ -399,7 +374,7 @@ export default function BulkOutreach({ onBack, messages }) {
                     options={cities.map(c => ({ value: c.name, label: c.name }))}
                   />
                 </div>
-                <div className="form-group flex-2">
+                <div className="form-group" style={{ flex: '2' }}>
                   <label>Keyword</label>
                   <div style={{ position: 'relative' }}>
                     <input 
@@ -413,16 +388,18 @@ export default function BulkOutreach({ onBack, messages }) {
                     <Search className="icon-small" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#8b949e' }} />
                   </div>
                 </div>
+                <div className="form-group" style={{ flex: '0.8' }}>
+                  <button 
+                    onClick={handleScrape} 
+                    disabled={isScraping || isSending}
+                    className="btn-primary"
+                    style={{ width: '100%', height: '45px', marginTop: 0 }}
+                  >
+                    {isScraping ? <Loader2 className="icon-small spin" /> : <Search className="icon-small" />}
+                    <span className="hide-tablet">Scrape</span>
+                  </button>
+                </div>
               </div>
-
-              <button 
-                onClick={handleScrape} 
-                disabled={isScraping || isSending}
-                className="btn-primary"
-                style={{ width: '100%', marginTop: '1rem' }}
-              >
-                {isScraping ? <><Loader2 className="icon-small spin" /> Scraping...</> : <><Search className="icon-small" /> Start Scraping</>}
-              </button>
             </>
           ) : (
             <div className="form-group">
@@ -460,15 +437,8 @@ export default function BulkOutreach({ onBack, messages }) {
 
         {leads.length > 0 && (
           <div className="results-container" style={{ marginTop: '2rem' }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: '1rem', 
-              flexWrap: 'wrap', 
-              gap: '0.75rem' 
-            }}>
-              <div className="flex-center" style={{ flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+            <div className="results-header">
+              <div className="results-actions">
                 <h3 style={{ margin: 0, marginRight: '0.5rem' }}>{selectedIndices.size}/{leads.length} selected</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={handleCleanJunk} className="btn-secondary flex-center" title="Filter out common junk emails" style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>
@@ -483,11 +453,7 @@ export default function BulkOutreach({ onBack, messages }) {
                 onClick={handleBulkSend} 
                 disabled={isSending || isScraping || selectedIndices.size === 0}
                 className="btn-primary"
-                style={{ 
-                  backgroundColor: 'var(--user-bubble)',
-                  flex: window.innerWidth < 480 ? '1' : 'none',
-                  marginTop: window.innerWidth < 480 ? '0.5rem' : '0'
-                }}
+                style={{ backgroundColor: 'var(--user-bubble)' }}
               >
                 {isSending ? (
                   <><Loader2 className="icon-small spin" /> {sendingProgress.current === 1 ? 'Sending first email...' : 'Queueing remaining...'}</>
@@ -498,7 +464,7 @@ export default function BulkOutreach({ onBack, messages }) {
             </div>
 
             <div className="table-wrapper" style={{ overflowX: 'auto', background: 'var(--bg-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'fixed' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
                     <th style={{ padding: '12px', width: '40px' }}>
@@ -506,9 +472,9 @@ export default function BulkOutreach({ onBack, messages }) {
                             {selectedIndices.size === leads.length ? <CheckSquare size={18} /> : <Square size={18} />}
                         </button>
                     </th>
-                    <th style={{ padding: '12px', width: '28%' }}>Business</th>
-                    <th style={{ padding: '12px', width: '28%' }}>Phone / WhatsApp</th>
-                    <th style={{ padding: '12px', width: '28%' }}>Contact</th>
+                    <th style={{ padding: '12px', minWidth: '150px' }}>Business</th>
+                    <th style={{ padding: '12px', minWidth: '150px' }}>Phone / WhatsApp</th>
+                    <th style={{ padding: '12px', minWidth: '150px' }}>Contact</th>
                     <th style={{ padding: '12px', width: '80px', textAlign: 'center' }}>Action</th>
                   </tr>
                 </thead>
@@ -594,10 +560,10 @@ export default function BulkOutreach({ onBack, messages }) {
           </div>
         )}
 
-        <div className="template-editor" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--draft-bubble)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div className="template-editor">
+          <div className="template-header">
             <div className="draft-label" style={{ margin: 0 }}>Template Editor</div>
-            <div className="flex-center" style={{ gap: '0.5rem', position: 'relative' }}>
+            <div className="template-controls">
                <button onClick={handleNewTemplate} className="btn-secondary flex-center" title="Start a fresh template">
                   <Plus size={16} /> New
                </button>

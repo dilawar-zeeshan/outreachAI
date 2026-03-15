@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import { getKnowledgeBase, updateKnowledgeBase } from '../services/api';
 
-const KnowledgeBase = ({ onBack }) => {
+const KnowledgeBase = () => {
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -71,9 +71,6 @@ const KnowledgeBase = ({ onBack }) => {
   return (
     <div className="kb-container">
       <div className="kb-header">
-         <button onClick={onBack} className="btn-icon" title="Back to Chat">
-           <ArrowLeft className="icon" />
-         </button>
          <h2>Knowledge Base</h2>
          <button onClick={handleSave} className="btn-primary flex-center" disabled={saving}>
             <Save className="icon-small" /> {saving ? 'Saving...' : 'Update Base'}

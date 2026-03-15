@@ -8,7 +8,7 @@ import OutreachHistory from './components/OutreachHistory';
 import BulkOutreach from './components/BulkOutreach';
 import PortfolioPage from './pages/PortfolioPage';
 import { sendChatMessage, supabase } from './services/api';
-import { BookOpen, LogOut, History, Zap, Target, Trash2 } from 'lucide-react';
+import { BookOpen, LogOut, History, Zap, Target, Trash2, MessageSquare, Layout } from 'lucide-react';
 
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -116,35 +116,84 @@ function Dashboard() {
     await supabase.auth.signOut();
   };
 
-  const handleBack = () => navigate('/');
+  const Sidebar = () => {
+    const isActive = (path) => location.pathname === path;
+
+    return (
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <h1>E-LABZ AI</h1>
+          <p>Outreach Engine</p>
+        </div>
+        
+        <nav className="nav-menu">
+          <button 
+            onClick={() => navigate('/')} 
+            className={`nav-item ${isActive('/') ? 'active' : ''}`}
+          >
+            <MessageSquare className="icon-small" />
+            <span>Chat Assistant</span>
+          </button>
+          
+          <button 
+            onClick={() => navigate('/bulk')} 
+            className={`nav-item ${isActive('/bulk') ? 'active' : ''}`}
+          >
+            <Target className="icon-small" />
+            <span>Bulk Outreach</span>
+          </button>
+          
+          <button 
+            onClick={() => navigate('/history')} 
+            className={`nav-item ${isActive('/history') ? 'active' : ''}`}
+          >
+            <History className="icon-small" />
+            <span>History</span>
+          </button>
+          
+          <button 
+            onClick={() => navigate('/knowledge')} 
+            className={`nav-item ${isActive('/knowledge') ? 'active' : ''}`}
+          >
+            <BookOpen className="icon-small" />
+            <span>Knowledge Base</span>
+          </button>
+
+          <div className="mobile-only-spacer" style={{ flex: 1, display: 'none' }} />
+
+          <button onClick={handleLogout} className="nav-item sign-out-nav">
+            <LogOut className="icon-small" />
+            <span>Sign Out</span>
+          </button>
+        </nav>
+      </aside>
+    );
+  };
+
+  const DashboardLayout = ({ children }) => (
+    <div className="dashboard-layout">
+      <Sidebar />
+      <main className="main-content">
+        {children}
+      </main>
+    </div>
+  );
 
   return (
     <>
     <Routes>
       <Route path="/" element={
         <ProtectedRoute session={session}>
-          <div className="dashboard-wrapper">
+          <DashboardLayout>
             <div className="app-container">
               <header className="chat-header">
                 <div className="header-left">
-                  <h1>E-LABZ AI Outreach</h1>
+                  <h1>Chat Assistant</h1>
                   <p>Private Assistant to Zeeshan</p>
                 </div>
                 <div className="header-actions">
-                  <button onClick={handleClearChat} className="btn-secondary flex-center" title="Clear Chat Context" style={{ color: '#f85149' }}>
-                    <Trash2 className="icon-small" /> Clear Chat
-                  </button>
-                  <button onClick={() => navigate('/bulk')} className="btn-secondary flex-center" title="Bulk Outreach">
-                    <Target className="icon-small" /> Bulk Outreach
-                  </button>
-                  <button onClick={() => navigate('/history')} className="btn-secondary flex-center" title="Outreach History">
-                    <History className="icon-small" /> History
-                  </button>
-                  <button onClick={() => navigate('/knowledge')} className="btn-secondary flex-center" title="Update Knowledge Base">
-                    <BookOpen className="icon-small tooltip-icon" /> Knowledge Base
-                  </button>
-                  <button onClick={handleLogout} className="btn-danger flex-center" title="Sign Out">
-                    <LogOut className="icon-small" /> Sign Out
+                  <button onClick={handleClearChat} className="btn-secondary flex-center" style={{ color: '#f85149', borderColor: 'rgba(248, 81, 73, 0.2)' }}>
+                    <Trash2 size={16} /> <span>Clear Chat</span>
                   </button>
                 </div>
               </header>
@@ -155,31 +204,31 @@ function Dashboard() {
                 <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
               </div>
             </div>
-          </div>
+          </DashboardLayout>
         </ProtectedRoute>
       } />
 
       <Route path="/bulk" element={
         <ProtectedRoute session={session}>
-          <div className="dashboard-wrapper">
-            <BulkOutreach onBack={handleBack} messages={messages} />
-          </div>
+          <DashboardLayout>
+            <BulkOutreach messages={messages} />
+          </DashboardLayout>
         </ProtectedRoute>
       } />
 
       <Route path="/history" element={
         <ProtectedRoute session={session}>
-          <div className="dashboard-wrapper">
-            <OutreachHistory onBack={handleBack} />
-          </div>
+          <DashboardLayout>
+            <OutreachHistory />
+          </DashboardLayout>
         </ProtectedRoute>
       } />
 
       <Route path="/knowledge" element={
         <ProtectedRoute session={session}>
-          <div className="dashboard-wrapper">
-            <KnowledgeBase onBack={handleBack} />
-          </div>
+          <DashboardLayout>
+            <KnowledgeBase />
+          </DashboardLayout>
         </ProtectedRoute>
       } />
 

@@ -54,9 +54,17 @@ serve(async (req) => {
 
     if (error) throw error
 
+    // Fetch separate pending count for the UI badge
+    const { count: pendingCount } = await supabaseAdmin
+      .from('outreach_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+
     return new Response(JSON.stringify({ 
       emails: data,
       totalCount: count,
+      pendingCount: pendingCount || 0,
       page,
       limit
     }), {
