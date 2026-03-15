@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle, Search } from 'lucide-react';
-import { getEmailHistory, sendEmail } from '../services/api';
+import { ArrowLeft, ChevronLeft, ChevronRight, Mail, Calendar, Tag, RotateCcw, Loader2, CheckCircle, AlertCircle, Search, Play } from 'lucide-react';
+import { getEmailHistory, sendEmail, processQueue } from '../services/api';
 
 const OutreachHistory = ({ onBack }) => {
   const [emails, setEmails] = useState([]);
@@ -24,6 +24,13 @@ const OutreachHistory = ({ onBack }) => {
 
   useEffect(() => {
     fetchHistory();
+    
+    // Auto-refresh every 30 seconds to show background progress
+    const interval = setInterval(() => {
+        fetchHistory();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [page, debouncedSearch, activeStatus]);
 
   const fetchHistory = async () => {
@@ -77,49 +84,61 @@ const OutreachHistory = ({ onBack }) => {
       </div>
 
       <div className="kb-content">
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', padding: '0.25rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', width: 'fit-content' }}>
             <button 
               onClick={() => { setActiveStatus('sent'); setPage(0); }}
+              className="flex-center"
               style={{ 
-                padding: '0.75rem 1.5rem', 
-                background: 'none', 
+                padding: '0.6rem 1.25rem', 
+                background: activeStatus === 'sent' ? 'var(--primary)' : 'transparent', 
                 border: 'none', 
-                color: activeStatus === 'sent' ? 'var(--primary)' : '#8b949e',
-                borderBottom: activeStatus === 'sent' ? '2px solid var(--primary)' : '2px solid transparent',
+                color: activeStatus === 'sent' ? '#fff' : '#8b949e',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '600',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                gap: '0.5rem'
               }}
             >
-              Sent History
+              <RotateCcw className="icon-small" /> Sent History
             </button>
             <button 
               onClick={() => { setActiveStatus('pending'); setPage(0); }}
+              className="flex-center"
               style={{ 
-                padding: '0.75rem 1.5rem', 
-                background: 'none', 
+                padding: '0.6rem 1.25rem', 
+                background: activeStatus === 'pending' ? 'var(--primary)' : 'transparent', 
                 border: 'none', 
-                color: activeStatus === 'pending' ? 'var(--primary)' : '#8b949e',
-                borderBottom: activeStatus === 'pending' ? '2px solid var(--primary)' : '2px solid transparent',
+                color: activeStatus === 'pending' ? '#fff' : '#8b949e',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '600',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                gap: '0.5rem'
               }}
             >
-              Pending Queue
+              <Play className="icon-small" /> Pending Queue
+              {activeStatus !== 'pending' && totalCount > 0 && activeStatus === 'sent' && (
+                  // Small indicator if there are pending items while on Sent tab
+                  <span style={{ fontSize: '0.7rem', background: '#f85149', color: '#fff', padding: '2px 6px', borderRadius: '10px', marginLeft: '4px' }}>
+                    Active
+                  </span>
+              )}
             </button>
         </div>
 
-        <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
-          <input 
-            type="text" 
-            placeholder="Search by email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="chat-input-field"
-            style={{ width: '100%', paddingLeft: '2.5rem', height: '45px' }}
-          />
-          <Search className="icon-small text-dim" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input 
+                type="text" 
+                placeholder="Search by email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="chat-input-field"
+                style={{ width: '100%', paddingLeft: '2.5rem', height: '45px' }}
+              />
+              <Search className="icon-small text-dim" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+            </div>
         </div>
 
         {message && (
@@ -138,8 +157,13 @@ const OutreachHistory = ({ onBack }) => {
         ) : (
           <>
             <div className="history-list">
-              {emails.map((email) => (
-                <div key={email.id} className="history-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {emails.filter(e => e.status === activeStatus).map((email) => (
+                <div key={email.id} className="history-item" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    borderLeft: `4px solid ${email.status === 'sent' ? '#3fb950' : '#f1e05a'}`
+                }}>
                   <div style={{ flex: 1 }}>
                     <div className="history-info">
                       <div className="history-row">

@@ -234,7 +234,14 @@ export const processQueue = async () => {
   });
 
   if (!response.ok) {
-    return null; // Ignore errors quietly if nothing to process
+    const errorDetails = await response.text();
+    let errMsg = errorDetails;
+    try {
+      const parsed = JSON.parse(errorDetails);
+      if (parsed.error) errMsg = parsed.error;
+      else if (parsed.message) errMsg = parsed.message; // some success-like messages with 4xx
+    } catch (e) {}
+    throw new Error(errMsg);
   }
 
   return response.json();

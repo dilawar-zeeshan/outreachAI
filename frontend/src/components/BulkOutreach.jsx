@@ -134,14 +134,15 @@ export default function BulkOutreach({ onBack, messages }) {
 
     try {
         // Send the very first one immediately
-        const firstLead = leadsWithEmails[0];
         setSendingProgress({ current: 1, total: leadsWithEmails.length });
+        const firstLead = leadsWithEmails[0];
         await sendEmail(firstLead.emails[0], templateSubject, templateBody, keyword);
         setSuccessCount(1);
         
-        // Queue the rest to be sent 1 every 3 minutes
+        // Queue the rest to be sent by background workers
         const restLeads = leadsWithEmails.slice(1);
         if (restLeads.length > 0) {
+            setSendingProgress({ current: 2, total: leadsWithEmails.length }); // "Queueing..."
             const queueItems = restLeads.map(lead => ({
                 email: lead.emails[0], 
                 subject: templateSubject, 
@@ -489,7 +490,7 @@ export default function BulkOutreach({ onBack, messages }) {
                 }}
               >
                 {isSending ? (
-                  <><Loader2 className="icon-small spin" /> Sending ({sendingProgress.current}/{sendingProgress.total})</>
+                  <><Loader2 className="icon-small spin" /> {sendingProgress.current === 1 ? 'Sending first email...' : 'Queueing remaining...'}</>
                 ) : (
                   <><Send className="icon-small" /> Send Bulk Outreach</>
                 )}
