@@ -73,7 +73,7 @@ export default function BulkOutreach({ messages }) {
     setSelectedIndices(new Set());
     
     try {
-      const results = await scrapeLeads(keyword, cityName, countryName);
+      const results = await scrapeLeads(keyword, cityName, countryName, countryId, true);
       setLeads(results);
       // Select all by default
       setSelectedIndices(new Set(results.map((_, i) => i)));
@@ -167,6 +167,41 @@ export default function BulkOutreach({ messages }) {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+  };
+
+  const handleDownloadCSV = () => {
+    const headers = ['Business Name', 'Website', 'Phone', 'Emails', 'Address', 'Rating'];
+    const rows = leads.map(lead => [
+      lead.name || '',
+      lead.website || '',
+      lead.phone || '',
+      (lead.emails || []).join('; '),
+      lead.address || '',
+      lead.rating !== null ? lead.rating : ''
+    ]);
+    
+    const escapeCSV = (field) => {
+      const stringified = String(field);
+      if (stringified.includes(',') || stringified.includes('"') || stringified.includes('\n')) {
+        return `"${stringified.replace(/"/g, '""')}"`;
+      }
+      return stringified;
+    };
+    
+    const csvContent = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", url);
+    downloadAnchorNode.setAttribute("download", `leads_${keyword.replace(/\s+/g, '_')}_${cityName}.csv`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleCleanJunk = () => {
@@ -446,6 +481,9 @@ export default function BulkOutreach({ messages }) {
                   </button>
                   <button onClick={handleDownloadJSON} className="btn-secondary flex-center" style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>
                       <Download className="icon-small" /> JSON
+                  </button>
+                  <button onClick={handleDownloadCSV} className="btn-secondary flex-center" style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>
+                      <Download className="icon-small" /> CSV
                   </button>
                 </div>
               </div>

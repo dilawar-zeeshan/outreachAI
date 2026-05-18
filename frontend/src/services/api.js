@@ -140,7 +140,28 @@ export const getEmailHistory = async (page = 0, limit = 20, search = '', status 
     return response.json(); 
 };
 
-export const scrapeLeads = async (keyword, city, country) => {
+export const scrapeLeads = async (keyword, city, country, countryCode, deepSearch) => {
+  try {
+    console.log(`[API] Attempting to connect to local Google Maps scraper with deepSearch=${deepSearch || false}...`);
+    const localResponse = await fetch("http://localhost:3001/scrape", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ keyword, city, country, deepSearch })
+    });
+    
+    if (localResponse.ok) {
+      console.log("[API] Local scraper succeeded! Returning scraped business leads.");
+      return await localResponse.json();
+    } else {
+      console.warn("[API] Local scraper responded with error, falling back to cloud...");
+    }
+  } catch (err) {
+    console.log("[API] Local scraper is not running or unreachable, falling back to Supabase Edge Function:", err.message);
+  }
+
+  // Cloud/Edge Function Fallback
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || anonKey;
 
@@ -150,7 +171,7 @@ export const scrapeLeads = async (keyword, city, country) => {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ keyword, city, country }),
+    body: JSON.stringify({ keyword, city, country, countryCode, deepSearch }),
   });
 
   if (!response.ok) {
