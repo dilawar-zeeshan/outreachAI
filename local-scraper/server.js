@@ -25,16 +25,68 @@ function getDistrictQueries(keyword, city) {
   const c = city.toLowerCase().trim();
   const districts = [];
   
-  if (c === 'madrid') {
-    districts.push('Centro', 'Salamanca', 'Chamberi', 'Retiro', 'Arganzuela', 'Chamartin', 'Tetuan', 'Carabanchel', 'Moncloa', 'Latina', 'Vallecas', 'Ciudad Lineal');
-  } else if (c === 'barcelona') {
-    districts.push('Eixample', 'Ciutat Vella', 'Gracia', 'Sants-Montjuic', 'Sarria-Sant Gervasi', 'Les Corts', 'Horta-Guinardo', 'Nou Barris', 'Sant Andreu', 'Sant Marti');
+  const cityDistricts = {
+    madrid: ['Centro', 'Salamanca', 'Chamberi', 'Retiro', 'Arganzuela', 'Chamartin', 'Tetuan', 'Carabanchel', 'Moncloa', 'Latina', 'Vallecas', 'Ciudad Lineal', 'Villaverde', 'Puente de Vallecas', 'San Blas', 'Barajas', 'Montecarmelo', 'Las Tablas', 'Parla', 'Fuenlabrada', 'Alcorcon', 'Getafe'],
+    barcelona: ['Eixample', 'Ciutat Vella', 'Gracia', 'Sants-Montjuic', 'Sarria-Sant Gervasi', 'Les Corts', 'Horta-Guinardo', 'Nou Barris', 'Sant Andreu', 'Sant Marti', 'Hostafrancs', 'Poble-sec', 'Raval', 'Born', 'Vallcarca', 'El Carmel', 'Trinitat Vella'],
+    // US Cities
+    austin: ['Downtown', 'South Congress', 'East Austin', 'West Austin', 'North Loop', 'Mueller', 'Barton Hills', 'Zilker', 'Hyde Park', 'Rosedale', 'Allandale', 'Brentwood', 'Crestview', 'Windsor Park', 'University Hills', 'Riverside', 'South Lamar', 'Northwest Hills', 'Great Hills', 'Circle C'],
+    'new york': ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'Harlem', 'Upper East Side', 'Upper West Side', 'Chelsea', 'SoHo', 'Tribeca', 'Financial District', 'Midtown', 'East Village', 'West Village', 'Williamsburg', 'Astoria', 'Jackson Heights', 'Flushing', 'Riverdale'],
+    'los angeles': ['Downtown', 'Hollywood', 'Beverly Hills', 'Santa Monica', 'Venice', 'Culver City', 'West Hollywood', 'Pasadena', 'Glendale', 'Long Beach', 'Torrance', 'Inglewood', 'Korea Town', 'Silverlake', 'Echo Park', 'Los Feliz', 'Brentwood', 'Pacific Palisades', 'Sherman Oaks', 'Studio City'],
+    miami: ['Downtown', 'South Beach', 'Brickell', 'Wynwood', 'Coconut Grove', 'Coral Gables', 'South Miami', 'Key Biscayne', 'Bal Harbour', 'Surfside', 'Little Havana', 'Little Haiti', 'Doral', 'Kendall', 'Pinecrest', 'Palmetto Bay', 'Homestead', 'Aventura', 'Hallandale Beach'],
+    chicago: ['Loop', 'River North', 'Lincoln Park', 'Lakeview', 'Wicker Park', 'Bucktown', 'Logan Square', 'Ukrainian Village', 'Pilsen', 'Bridgeport', 'Hyde Park', 'Woodlawn', 'South Loop', 'Streeterville', 'Old Town', 'Gold Coast', 'River West', 'West Loop', 'South Side', 'West Town'],
+    houston: ['Downtown', 'Midtown', 'Montrose', 'Museum District', 'The Heights', 'Washington Avenue', 'Galleria', 'Memorial', 'Spring Branch', 'Energy Corridor', 'Westchase', 'Bellaire', 'Meyerland', 'Rice Military', 'East End', 'Second Ward', 'Third Ward', 'Medical Center', 'Tanglewood', 'Hunters Creek'],
+    dallas: ['Downtown', 'Uptown', 'Deep Ellum', 'Bishop Arts', 'Oak Cliff', 'Lakewood', 'Lake Highlands', 'Preston Hollow', 'University Park', 'Highland Park', 'Addison', 'Carrollton', 'Richardson', 'Plano', 'Frisco', 'McKinney', 'Arlington', 'Fort Worth', 'Oak Lawn', 'Victory Park'],
+    'san francisco': ['Financial District', 'SoMa', 'Mission', 'Castro', 'Haight-Ashbury', 'Hayes Valley', 'Marina', 'Pacific Heights', 'Nob Hill', 'Russian Hill', 'North Beach', 'Chinatown', 'Tenderloin', 'Potrero Hill', 'Dogpatch', 'Bernal Heights', 'Glen Park', 'Noe Valley', 'Inner Sunset', 'Outer Sunset'],
+    seattle: ['Downtown', 'Capitol Hill', 'First Hill', 'South Lake Union', 'Queen Anne', 'Magnolia', 'Ballard', 'Fremont', 'Wallingford', 'University District', 'Greenlake', 'Ravenna', 'Wedgwood', 'Magnolia', 'Beacon Hill', 'Columbia City', 'Rainier Valley', 'West Seattle', 'Ballard', 'Eastlake'],
+    denver: ['Downtown', 'LoDo', 'RiNo', 'Highland', 'West Highland', 'Sloan Lake', 'Sunnyvale', 'Park Hill', 'Stapleton', 'Montbello', 'Globeville', 'Sullivan', 'Gateway', 'Virginia Village', 'Wash Park', 'Platt Park', 'University Hills', 'University Park', 'Virginia Vale', 'Belcaro'],
+    boston: ['Downtown', 'Beacon Hill', 'Back Bay', 'South End', 'North End', 'Charlestown', 'East Boston', 'South Boston', 'Allston', 'Brighton', 'Jamaica Plain', 'Roxbury', 'Dorchester', 'Mattapan', 'Hyde Park', 'Roslindale', 'West Roxbury', 'Brookline', 'Cambridge', 'Somerville'],
+    'las vegas': ['Downtown', 'The Strip', 'Summerlin', 'Centennial Hills', 'Provence', 'Sunrise', 'Paradise', 'Spring Valley', 'Enterprise', 'Southern Highlands', 'The Lakes', 'Desert Shores', 'Tournament Hills', 'MacDonald Highlands', 'Anthem', 'Lake Las Vegas', 'North Las Vegas', 'Henderson'],
+    phoenix: ['Downtown', 'Central City', 'Uptown', 'Midtown', 'Arcadia', 'Scottsdale', 'Paradise Valley', 'Ahwatukee', 'Chandler', 'Gilbert', 'Mesa', 'Tempe', 'Glendale', 'Peoria', 'Surprise', 'Goodyear', 'Avondale', 'Buckeye', 'Laveen', 'Maryvale'],
+    atlanta: ['Downtown', 'Midtown', 'Buckhead', 'Virginia Highland', 'Poncey-Highland', 'Inman Quarter', 'Ormewood Park', 'Grant Park', 'East Atlanta', 'Kirkwood', 'Edgewood', 'Old Fourth Ward', 'Castleberry Hill', 'West End', 'Bankhead', 'Vine City', 'Ansley Park', 'Morningside', 'Virginia Ave', 'Peachtree Hills'],
+    portland: ['Downtown', 'Pearl District', 'Nob Hill', 'Alberta Arts', 'Mississippi Ave', 'Hawthorne', 'Division', 'Sellwood', 'Moreland', 'Woodstock', 'Lents', 'Montavilla', 'Roseway', 'Kerns', 'Hosford-Abernethy', 'Buckman', 'Richmond', 'Sunnyside', 'Arden'],
+    // UK Cities
+    london: ['Westminster', 'Camden', 'Islington', 'Hackney', 'Tower Hamlets', 'Southwark', 'Lambeth', 'Wandsworth', 'Kensington', 'Hammersmith', 'Brent', 'Ealing', 'Hounslow', 'Richmond', 'Bromley', 'Croydon', 'Bexley', 'Greenwich', 'Lewisham', 'Southwark'],
+    manchester: ['City Centre', 'Northern Quarter', 'Ancoats', 'Salford', ' Hulme', 'Chorlton', 'Didsbury', 'Withington', 'Fallowfield', 'Levenshulme', 'Burnage', 'Wythenshawe', 'Stockport', 'Oldham', 'Rochdale', 'Bolton', 'Bury', 'Trafford'],
+    birmingham: ['City Centre', 'Brindleyplace', 'Bordesley', 'Hodge Hill', 'Erdington', 'Aston', 'Nechells', 'Ladywood', 'Edgbaston', 'Selly Oak', 'Bromsgrove', 'Solihull', 'Coventry', 'Wolverhampton', 'Walsall', 'Dudley', 'West Bromwich'],
+    // Major International
+    paris: ['1st arrondissement', '2nd arrondissement', '3rd arrondissement', '4th arrondissement', '5th arrondissement', '6th arrondissement', '7th arrondissement', '8th arrondissement', '9th arrondissement', '10th arrondissement', '11th arrondissement', '12th arrondissement', '13th arrondissement', '14th arrondissement', '15th arrondissement', '16th arrondissement', '17th arrondissement', '18th arrondissement', '19th arrondissement', '20th arrondissement'],
+    berlin: ['Mitte', 'Kreuzberg', 'Prenzlauer Berg', 'Friedrichshain', 'Neukölln', 'Charlottenburg', 'Wilmersdorf', 'Schöneberg', 'Tempelhof', 'Steglitz', 'Pankow', 'Lichtenberg', 'Marzahn', 'Treptow', 'Köpenick', 'Spandau', 'Reinickendorf', 'Zehlendorf', 'Köpenick'],
+    amsterdam: ['Centrum', 'Westpoort', 'Nieuw-West', 'Oost', 'Zuid', 'Noord', 'Zuidoost', 'Amsterdam-West', 'Amsterdam-Oost', 'Westerpark', 'Oud-West', 'De Pijp', 'Watergraafsmeer', 'IJburg', 'Bijlmer', 'Amsterdam-Noord', 'Slotervaart', 'Osdorp'],
+    tokyo: ['Shinjuku', 'Shibuya', 'Minato', 'Meguro', 'Setagaya', 'Nakano', 'Suginami', 'Toshima', 'Kita', 'Arakawa', 'Itabashi', 'Nerima', 'Adachi', 'Katsushika', 'Edogawa', 'Sumida', 'Koto', 'Shinagawa', 'Bunkyo'],
+    sydney: ['CBD', 'Surry Hills', 'Paddington', 'Newtown', 'Chippendale', 'Pyrmont', 'Darling Harbour', 'Glebe', 'Leichhardt', 'Marrickville', 'Balmain', 'Newcastle', 'Bondi', 'Coogee', 'Manly', 'Parramatta', 'Chatswood', 'North Sydney'],
+    toronto: ['Downtown', 'Yorkville', 'The Annex', 'Kensington Market', 'Queen West', 'Liberty Village', 'King West', 'Distillery District', 'Harbourfront', 'Leslieville', 'Riverdale', 'The Beaches', 'High Park', 'Roncesvalles', 'Parkdale', 'Little Portugal', 'Little Italy', 'East York', 'North York', 'Scarborough'],
+    vancouver: ['Downtown', 'Gastown', 'Yaletown', 'Coal Harbour', 'West End', 'Kensington', 'Kitsilano', 'Kerrisdale', 'Dunbar', 'Point Grey', 'Oakridge', 'Marpole', 'Riverdale', 'Steveston', 'Richmond', 'Burnaby', 'New Westminster', 'Surrey', 'Langley'],
+    melbourne: ['CBD', 'Fitzroy', 'Collingwood', 'Richmond', 'South Yarra', 'Prahran', 'St Kilda', 'Elwood', 'Elsternwick', 'Caulfield', 'Malvern', 'Armadale', 'Toorak', 'Camberwell', 'Hawthorn', 'Kew', 'Coburg', 'Brunswick', 'Essendon', 'Moonee Ponds'],
+    'new delhi': ['Connaught Place', 'Karol Bagh', 'Rajouri Garden', 'Dwarka', 'Saket', 'Vasant Kunj', 'Hauz Khas', 'Green Park', 'Lajpat Nagar', 'Sarojini Nagar', 'Lajpat Nagar', 'Nehru Place', 'Janakpuri', 'Rohini', 'Pitampura', 'Shahdara', 'Mayur Vihar', 'Paharganj'],
+    mumbai: ['South Mumbai', 'Colaba', 'CST', 'Fort', 'Marine Drive', 'Carmichael Road', 'Bandra', 'Andheri', 'Juhu', 'Versova', 'Kowloon', 'Powai', 'Mulund', 'Thane', 'Dadar', 'Worli', 'Lower Parel', 'Worli', 'Byculla'],
+    dubai: ['Downtown', 'Marina', 'JBR', 'Palm Jumeirah', 'Business Bay', 'DIFC', 'Deira', 'Bur Dubai', 'Al Barsha', 'Jumeirah', 'The Springs', 'The Greens', 'Dubai Silicon Oasis', 'International City', 'Sports City', 'Dubai Hills', 'JVC', 'Al Nahda', 'Sharjah'],
+    'riyadh': ['Al Olaya', 'Al Murabba', 'Al Malaz', 'Al Nazim', 'Al Hada', 'Al Shifa', 'Al Hamra', 'Al Zahra', 'Al Naseem', 'Al Qirwan', 'Al Masyaf', 'Al Nakheel', 'Al Wurud', 'King Abdullah Financial District', 'Hittin', 'Al Qayyarah', 'Suleman'],
+    'singapore': ['Orchard', 'Marina Bay', 'CBD', 'Clarke Quay', 'Riverside', 'Holland Village', 'Dempsey', 'Sentosa', 'Jurong', 'Tampines', 'Bedok', 'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Clementi', 'Bukit Merah', 'Geylang', 'Kallang'],
+    sao_paulo: ['Centro', 'Sé', 'Consolação', 'Vila Madalena', 'Pinheiros', 'Itaim Bibi', 'Jardins', 'Moema', 'Vila Mariana', 'Perdizes', 'Lapa', 'Barra Funda', 'Santana', 'Tucuruvi', 'Vila Prudente', 'Ipiranga', 'Campo Limpo', 'Butantã', 'Morumbi'],
+    mexico_city: ['Polanco', 'Condesa', 'Roma', 'Del Valle', 'Narvarte', 'Coyoacan', 'San Angel', 'Coyoacan Centro', 'Narvarte Poniente', 'Benito Juarez', 'Anzures', 'San Rafael', 'Cuauhtemoc', 'Centro Historico', 'Zona Rosa', 'Reforma', 'Lomas', 'Chapultepec'],
+    'buenos aires': ['Palermo', 'Recoleta', 'Belgrano', 'Barrio Norte', 'Colegiales', 'Villa Urquiza', 'Nuñez', 'Saavedra', 'Almagro', 'Balvanera', 'San Cristobal', 'Boedo', 'Constitucion', 'San Telmo', 'Montserrat', 'San Nicolas', 'Retiro', 'Puerto Madero'],
+    amsterdam: ['Centrum', 'Zuid', 'Oost', 'West', 'Noord', 'Nieuw-West', 'Oost', 'Weesperbuurt', 'Plantage', 'Waterlooplein', 'Jordaan', 'De Pijp', 'Vondelpark', 'Olympic Stadium', 'Museum Quarter', 'De Pijp', 'Oud-West'],
+    istanbul: ['Sisli', 'Besiktas', 'Kadikoy', 'Beyoglu', 'Fatih', 'Bakirkoy', 'Uskudar', 'Umraniye', 'Pendik', 'Kartal', 'Maltepe', 'Bagcilar', 'Kucukcekmece', 'Esenyurt', 'Zeytinburnu', 'Bahcelievler', 'Gungoren', 'Bayrampasa', 'Sultangazi'],
+    toronto: ['Downtown Toronto', 'Etobicoke', 'North York', 'Scarborough', 'East York', 'York', 'Toronto', 'Mississauga', 'Brampton', 'Markham', 'Richmond Hill', 'Oakville', 'Burlington', 'Hamilton', 'Ottawa', 'London', 'Kitchener', 'Waterloo', 'Cambridge'],
+    vienna: ['Innere Stadt', 'Leopoldstadt', 'Wieden', 'Margareten', 'Mariahilf', 'Neubau', 'Josefstadt', 'Alsergrund', 'Altfünfhaus', 'Fünfhaus', 'Hermagor', 'Penz', 'Stadlau', 'Simmering', 'Meidling', 'Hietzing', 'Penzing', 'Döbling', 'Floridsdorf', 'Donaufeld'],
+    prague: ['Stare Mesto', 'Malá Strana', 'Hradcany', 'Vinohrady', 'Zizkov', 'Karlín', 'Holešovice', 'Liben', 'Dejvice', 'Břevnov', 'Košíře', 'Smíchov', 'Radlice', 'Řepy', 'Řepy', 'Strašnice', 'Vinohrady', 'Nusle'],
+  };
+  
+  if (cityDistricts[c]) {
+    districts.push(...cityDistricts[c]);
   } else {
-    // Generic sub-regions for any other city (cardinal directions and zones)
-    districts.push('Centro', 'Norte', 'Sur', 'Este', 'Oeste', 'Nordeste', 'Noroeste', 'Sureste', 'Suroeste');
+    // Try partial match
+    for (const [cityName, cityDists] of Object.entries(cityDistricts)) {
+      if (c.includes(cityName) || cityName.includes(c)) {
+        districts.push(...cityDists);
+        break;
+      }
+    }
+    if (districts.length === 0) {
+      districts.push('Centro', 'Norte', 'Sur', 'Este', 'Oeste', 'Nordeste', 'Noroeste', 'Sureste', 'Suroeste');
+    }
   }
   
-  // Return "keyword in district, city"
   return districts.map(district => `${keyword} in ${district}, ${city}`);
 }
 
@@ -207,7 +259,7 @@ app.post('/scrape', async (req, res) => {
               const rows = Array.from(card.querySelectorAll('.W4Efsd'));
               if (rows.length > 0) {
                 const fullText = rows.map(r => r.textContent).join(' | ');
-                const phoneRegex = /(\+?[0-9]{2,3}[ -]?[0-9]{3}[ -]?[0-9]{2,4}[ -]?[0-9]{2,4}|\+?[0-9]{9,12})/g;
+                const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
                 const matches = fullText.match(phoneRegex);
                 if (matches) {
                   const validPhone = matches.find(m => {

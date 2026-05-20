@@ -1,26 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Search, Mail, Building, Globe, MapPin, Send, Loader2, CheckCircle, AlertCircle, Download, Trash2, Edit2, Save, X, CheckSquare, Square, Filter, ChevronDown, Plus, Phone } from 'lucide-react';
 import { Select } from 'antd';
-import { Country, City } from 'country-state-city';
+import { Country } from 'country-state-city';
 import { scrapeLeads, sendEmail, queueEmails, getTemplates, saveTemplate, deleteTemplate } from '../services/api';
+import worldCitiesData from 'world-cities-json';
+
+const allCities = worldCitiesData.cities;
 
 const { Option } = Select;
 
 export default function BulkOutreach({ messages }) {
-  const [countryId, setCountryId] = useState('ES'); // Default to Spain
-  const [cityId, setCityId] = useState('Madrid');
-  const [keyword, setKeyword] = useState('');
-  const [leads, setLeads] = useState([]);
-
-  // Get data from CSC
-  const countries = Country.getAllCountries();
-  const cities = countryId ? City.getCitiesOfCountry(countryId) : [];
+  const getStoredState = (key, defaultVal) => {
+    try {
+      const stored = sessionStorage.getItem(`bulk_${key}`);
+      return stored !== null ? JSON.parse(stored) : defaultVal;
+    } catch { return defaultVal; }
+  };
   
-  // Find current country and city objects for human readable names
-  const currentCountry = countries.find(c => c.isoCode === countryId);
-  const countryName = currentCountry?.name || countryId;
-  const cityName = cityId;
+  const [countryId, setCountryId] = useState(() => getStoredState('countryId', 'US'));
+  const [cityId, setCityId] = useState(() => getStoredState('cityId', ''));
+  const [keyword, setKeyword] = useState(() => getStoredState('keyword', ''));
+  const [leads, setLeads] = useState(() => getStoredState('leads', []));
   const [selectedIndices, setSelectedIndices] = useState(new Set());
+  const [activeTab, setActiveTab] = useState(() => getStoredState('activeTab', 'search'));
+
   const [isScraping, setIsScraping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendingProgress, setSendingProgress] = useState({ current: 0, total: 0 });
@@ -28,8 +31,22 @@ export default function BulkOutreach({ messages }) {
   const [successCount, setSuccessCount] = useState(0);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState('search'); // 'search' or 'manual'
   const [manualEmails, setManualEmails] = useState('');
+
+  // Get data from CSC for countries
+  const countries = Country.getAllCountries();
+  
+  // Use world-cities-json for cities - memoized by countryId
+  const cities = useMemo(() => {
+    if (!countryId) return [];
+    const filtered = allCities.filter(c => c.iso2 === countryId);
+    return filtered.sort((a, b) => a.city.localeCompare(b.city));
+  }, [countryId]);
+  
+  // Find current country for human readable name
+  const currentCountry = countries.find(c => c.isoCode === countryId);
+  const countryName = currentCountry?.name || countryId;
+  const cityName = cityId;
 
   // Template state
   const [selectedTemplateId, setSelectedTemplateId] = useState(null);
@@ -43,6 +60,13 @@ export default function BulkOutreach({ messages }) {
   // Editing state for rows
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingData, setEditingData] = useState(null);
+
+  // Persist state to sessionStorage
+  useEffect(() => { sessionStorage.setItem('bulk_countryId', JSON.stringify(countryId)); }, [countryId]);
+  useEffect(() => { sessionStorage.setItem('bulk_cityId', JSON.stringify(cityId)); }, [cityId]);
+  useEffect(() => { sessionStorage.setItem('bulk_keyword', JSON.stringify(keyword)); }, [keyword]);
+  useEffect(() => { sessionStorage.setItem('bulk_leads', JSON.stringify(leads)); }, [leads]);
+  useEffect(() => { sessionStorage.setItem('bulk_activeTab', JSON.stringify(activeTab)); }, [activeTab]);
 
   // Initialize template from messages and load saved ones
   useEffect(() => {
@@ -385,7 +409,7 @@ export default function BulkOutreach({ messages }) {
                     value={countryId}
                     onChange={(val) => {
                       setCountryId(val);
-                      const countryCities = City.getCitiesOfCountry(val);
+                      const countryCities = worldCities.filter(c => c.iso2 === val);
                       setCityId(countryCities.length > 0 ? countryCities[0].name : '');
                     }}
                     filterOption={(input, option) =>
@@ -406,7 +430,7 @@ export default function BulkOutreach({ messages }) {
                     filterOption={(input, option) =>
                       (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={cities.map(c => ({ value: c.name, label: c.name }))}
+                    options={cities.map(c => ({ value: c.city, label: c.city }))}
                   />
                 </div>
                 <div className="form-group" style={{ flex: '2' }}>

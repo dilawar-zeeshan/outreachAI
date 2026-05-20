@@ -63,7 +63,7 @@ async function getPageDetails(url: string, depth: number = 0): Promise<{ name: s
     const telMatches = text.match(/tel:([+0-9\-\s]+)/gi);
     if (telMatches) phones.push(...telMatches.map(m => m.replace(/tel:/i, '').replace(/[^\d+]/g, '')));
     
-    const generalPhoneMatches = text.match(/(?:\+|00)\d{1,3}[\s.-]?\d{2,3}[\s.-]?\d{3}[\s.-]?\d{3}/g) || text.match(/\b[6789]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/g);
+    const generalPhoneMatches = text.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g);
     if (generalPhoneMatches) phones.push(...generalPhoneMatches.map(m => m.replace(/[^\d+]/g, '')));
     
     phones = Array.from(new Set(phones)).filter(p => p.length >= 8 && p.length <= 15);
